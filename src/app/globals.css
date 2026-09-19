@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+/*
+ * GoldSeats design tokens, lifted from the original marketing landing page.
+ * Dark cinema surfaces with a gold accent. Every colour used in the product
+ * should come from here rather than a literal hex in a component.
+ */
+@theme {
+  --color-ink: #0a0a0f;
+  --color-ink-elevated: #101019;
+  --color-ink-card: #141420;
+  --color-cream: #f5f7ff;
+  --color-cream-muted: #9ca1ba;
+  --color-gold: #ffd700;
+  --color-gold-soft: #f5a623;
+  --color-gold-deep: #e4b91a;
+  --color-line: rgb(255 255 255 / 0.08);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-playfair), Georgia, serif;
+
+  --radius-card: 16px;
+
+  --shadow-card: 0 14px 40px rgb(0 0 0 / 0.35);
+  --shadow-gold: 0 0 0 1px rgb(255 215 0 / 0.35), 0 12px 32px rgb(255 215 0 / 0.18);
+
+  --ease-ui: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:root {
+  color-scheme: dark;
+  /* Halo behind a recommended "golden" seat. Not a colour token because it is
+     always used as a shadow or gradient stop, never as a fill. */
+  --gold-glow: rgb(255 215 0 / 0.25);
+}
+
+body {
+  background-color: var(--color-ink);
+  color: var(--color-cream);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

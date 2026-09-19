@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="GoldSeats">
+  <rect width="32" height="32" rx="7" fill="#0a0a0f" />
+  <!-- Cinema seat seen head-on: backrest, cushion, two armrests. -->
+  <path
+    d="M10 8.5a2.5 2.5 0 0 1 2.5-2.5h7A2.5 2.5 0 0 1 22 8.5V18h-12V8.5Z"
+    fill="#ffd700"
+  />
+  <path d="M8.5 19h15a1.5 1.5 0 0 1 1.5 1.5v2H7v-2A1.5 1.5 0 0 1 8.5 19Z" fill="#f5a623" />
+  <rect x="4.5" y="14" width="3" height="9" rx="1.5" fill="#e4b91a" />
+  <rect x="24.5" y="14" width="3" height="9" rx="1.5" fill="#e4b91a" />
+</svg>

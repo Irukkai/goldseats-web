@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GoldSeats — AI Seat Recommendations for Movie Theatres</title>
+  <meta name="description" content="Find the best seat in any movie theatre with AI. GoldSeats recommends the perfect seat for solo viewers and groups based on real-time availability.">
+  <meta property="og:title" content="GoldSeats — AI Seat Recommendations for Movie Theatres">
+  <meta property="og:description" content="Find the best seat in any movie theatre with AI. GoldSeats recommends the perfect seat for solo viewers and groups based on real-time availability.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://goldseats.app">
+  <meta property="og:site_name" content="GoldSeats">
+  <meta property="og:image" content="https://goldseats.app/og-image.png">
+  <link rel="canonical" href="https://goldseats.app">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Ctext y='1em' font-size='96'%3E⭐%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWix+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkR4j8x7nTov4pQ5lYx04ecqIHQzL/3mZ8xg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --bg-elev: #101019;
+      --bg-card: #141420;
+      --text: #f5f7ff;
+      --text-muted: #9ca1ba;
+      --gold: #ffd700;
+      --gold-soft: #f5a623;
+      --gold-glow: rgba(255, 215, 0, 0.25);
+      --line: rgba(255, 255, 255, 0.08);
+      --container: 1120px;
+      --radius: 16px;
+      --shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+      --transition: 220ms ease;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at 80% -10%, rgba(245, 166, 35, 0.12), transparent 38%),
+                  radial-gradient(circle at 5% 10%, rgba(255, 215, 0, 0.09), transparent 40%),
+                  var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    .container {
+      width: min(100% - 2rem, var(--container));
+      margin-inline: auto;
+    }
+
+    .section {
+      padding: 5rem 0;
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 700ms ease, transform 700ms ease;
+    }
+
+    .section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .section-title {
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: clamp(1.9rem, 2.8vw, 2.8rem);
+      line-height: 1.2;
+      margin: 0 0 0.75rem;
+      letter-spacing: 0.01em;
+    }
+
+    .section-subtitle {
+      color: var(--text-muted);
+      max-width: 62ch;
+      margin: 0 auto;
+    }
+
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+      background: rgba(10, 10, 15, 0.72);
+      border-bottom: 1px solid transparent;
+      transition: border-color var(--transition), background var(--transition);
+    }
+
+    .top-nav.scrolled {
+      border-color: var(--line);
+      background: rgba(10, 10, 15, 0.9);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      min-height: 72px;
+    }
+
+    .brand {
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--gold);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      white-space: nowrap;
+      letter-spacing: 0.01em;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.24);
+    }
+
+    .brand.shimmer {
+      background: linear-gradient(110deg, #e4b91a 20%, #fff0a3 50%, #e4b91a 80%);
+      background-size: 200% auto;
+      color: transparent;
+      -webkit-background-clip: text;
+      background-clip: text;
+      animation: brandShimmer 8s linear infinite;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.15rem;
+      align-items: center;
+      color: #d6daef;
+      font-size: 0.96rem;
+    }
+
+    .nav-links a {
+      position: relative;
+      transition: color var(--transition);
+    }
+
+    .nav-links a:hover {
+      color: var(--gold);
+    }
+
+    .nav-links a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -0.35rem;
+      width: 100%;
+      height: 1px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform var(--transition);
+    }
+
+    .nav-links a:hover::after {
+      transform: scaleX(1);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 0.75rem 1.2rem;
+      border: 1px solid transparent;
+      transition: transform var(--transition), filter var(--transition), box-shadow var(--transition), background var(--transition), color var(--transition), border-color var(--transition);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px) scale(1.03);
+      filter: brightness(1.06);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--gold) 0%, #ffcb3f 55%, var(--gold-soft) 100%);
+      color: #16130a;
+      box-shadow: 0 8px 24px rgba(245, 166, 35, 0.32);
+    }
+
+    .btn-secondary {
+      border-color: rgba(255, 215, 0, 0.72);
+      color: var(--gold);
+      background: rgba(255, 215, 0, 0.06);
+    }
+
+    .hero {
+      position: relative;
+      min-height: min(92vh, 860px);
+      display: grid;
+      align-items: center;
+      isolation: isolate;
+      padding: 5rem 0 4rem;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+      background-size: 42px 32px;
+      mask-image: radial-gradient(circle at 50% 30%, #000 35%, transparent 100%);
+      opacity: 0.5;
+      z-index: -2;
+      transform: perspective(900px) rotateX(34deg) translateY(-4%);
+      transform-origin: center top;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 36rem;
+      height: 36rem;
+      border-radius: 50%;
+      left: 50%;
+      top: -10rem;
+      transform: translateX(-50%);
+      background: radial-gradient(circle, rgba(255, 215, 0, 0.22), rgba(255, 215, 0, 0.08) 35%, transparent 65%);
+      filter: blur(20px);
+      animation: pulseGlow 5s ease-in-out infinite;
+      z-index: -1;
+    }
+
+    .hero-particles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      background:
+        radial-gradient(circle at 20% 35%, rgba(255, 215, 0, 0.18) 0 2px, transparent 2px) 0 0 / 180px 140px,
+        radial-gradient(circle at 65% 15%, rgba(245, 166, 35, 0.18) 0 2px, transparent 2px) 0 0 / 220px 160px,
+        radial-gradient(circle at 78% 64%, rgba(255, 215, 0, 0.12) 0 2px, transparent 2px) 0 0 / 200px 160px;
+      animation: drift 16s linear infinite;
+      opacity: 0.65;
+    }
+
+    .hero-content {
+      text-align: center;
+      max-width: 900px;
+      margin-inline: auto;
+      opacity: 0;
+      transform: translateY(14px);
+      animation: heroEnter 0.9s ease forwards;
+      animation-delay: 0.2s;
+    }
+
+    .hero-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      border: 1px solid rgba(255, 215, 0, 0.35);
+      border-radius: 999px;
+      padding: 0.35rem 0.78rem;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #f6e8aa;
+      background: rgba(255, 215, 0, 0.08);
+      box-shadow: inset 0 0 0 1px rgba(255, 215, 0, 0.1);
+      margin-bottom: 1rem;
+    }
+
+    .hero-title {
+      margin: 0;
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: clamp(2.2rem, 6vw, 4.4rem);
+      line-height: 1.07;
+      text-wrap: balance;
+    }
+
+    .hero-title .gold {
+      color: var(--gold);
+      text-shadow: 0 0 28px rgba(255, 215, 0, 0.32);
+    }
+
+    .hero-subtitle {
+      margin: 1.2rem auto 0;
+      max-width: 64ch;
+      color: #c0c5dc;
+      font-size: clamp(1rem, 1.6vw, 1.2rem);
+    }
+
+    .hero-actions {
+      margin-top: 2rem;
+      display: flex;
+      justify-content: center;
+      gap: 0.85rem;
+      flex-wrap: wrap;
+    }
+
+    .seat-score {
+      margin: 1.3rem auto 0;
+      width: fit-content;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.45rem 0.78rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 215, 0, 0.28);
+      background: rgba(255, 255, 255, 0.03);
+      color: #d9def4;
+      font-size: 0.86rem;
+      letter-spacing: 0.01em;
+    }
+
+    .seat-score-dot {
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.6);
+      animation: seatPulse 1.9s ease-out infinite;
+    }
+
+    .seat-score strong {
+      color: #fff1ad;
+      font-weight: 700;
+    }
+
+    .social-proof {
+      padding: 1.2rem 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+      text-align: center;
+    }
+
+    .social-proof p {
+      margin: 0.2rem 0;
+    }
+
+    .social-proof-main {
+      font-weight: 600;
+      color: #eef0fb;
+    }
+
+    .social-proof-sub {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+    }
+
+    .cards {
+      margin-top: 2.1rem;
+      display: grid;
+      gap: 1rem;
+    }
+
+    .cards-3 {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    .cards-6 {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
+      background-color: var(--bg-card);
+      border: 1px solid var(--line);
+      border-top: 2px solid rgba(255, 215, 0, 0.7);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.1rem;
+      box-shadow: var(--shadow);
+      transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    .card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255, 215, 0, 0.5);
+      box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.2), 0 12px 40px rgba(255, 215, 0, 0.15);
+    }
+
+    .card-icon {
+      font-size: 1.45rem;
+      color: var(--gold);
+      margin-bottom: 0.5rem;
+      display: inline-block;
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: #f8f9ff;
+    }
+
+    .card p {
+      margin: 0.55rem 0 0;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .how-it-works,
+    .features,
+    .waitlist {
+      text-align: center;
+    }
+
+    .waitlist-panel {
+      margin: 2rem auto 0;
+      max-width: 680px;
+      background: linear-gradient(180deg, rgba(255, 215, 0, 0.04), rgba(255, 255, 255, 0.01));
+      border: 1px solid rgba(255, 215, 0, 0.25);
+      border-radius: 18px;
+      padding: 1.2rem;
+      box-shadow: 0 12px 38px rgba(0, 0, 0, 0.32);
+    }
+
+    .waitlist-form {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+      margin-top: 0.8rem;
+    }
+
+    .waitlist-form input[type="email"] {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(0, 0, 0, 0.3);
+      color: var(--text);
+      padding: 0.88rem 0.95rem;
+      font-size: 0.98rem;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    .waitlist-form input[type="email"]::placeholder {
+      color: #a0a6bf;
+    }
+
+    .waitlist-form input[type="email"]:focus-visible,
+    .btn:focus-visible,
+    .footer-links a:focus-visible,
+    .nav-links a:focus-visible {
+      outline: none;
+      border-color: rgba(255, 215, 0, 0.85);
+      box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+    }
+
+    .form-note {
+      margin: 0.75rem 0 0;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+    }
+
+    .form-success {
+      margin-top: 0.75rem;
+      color: #ffe38a;
+      font-weight: 600;
+      min-height: 1.5em;
+    }
+
+    .site-footer {
+      margin-top: 4rem;
+      border-top: 1px solid var(--line);
+      padding: 2.2rem 0 2.5rem;
+      color: #b7bdd6;
+      background: rgba(0, 0, 0, 0.18);
+    }
+
+    .footer-grid {
+      display: grid;
+      gap: 1.2rem;
+    }
+
+    .footer-brand {
+      color: #e9ecfb;
+    }
+
+    .footer-links,
+    .footer-social {
+      display: flex;
+      gap: 0.95rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a,
+    .footer-social span {
+      color: #cdd2eb;
+      font-size: 0.94rem;
+      transition: color var(--transition);
+    }
+
+    .footer-social a {
+      width: 2rem;
+      height: 2rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.03);
+      transition: color var(--transition), border-color var(--transition), background var(--transition), transform var(--transition);
+    }
+
+    .footer-links a:hover,
+    .footer-social a:hover {
+      color: var(--gold);
+    }
+
+    .footer-social a:hover {
+      border-color: rgba(255, 215, 0, 0.45);
+      background: rgba(255, 215, 0, 0.09);
+      transform: translateY(-2px);
+    }
+
+    .footer-social i {
+      font-size: 0.95rem;
+    }
+
+    .policy {
+      text-align: left;
+    }
+
+    .policy-content {
+      margin: 1.5rem auto 0;
+      max-width: 840px;
+      padding: 1.2rem;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.02);
+      color: #c9cee5;
+    }
+
+    .policy-content h3 {
+      margin: 0.2rem 0 0.35rem;
+      color: #f2f4ff;
+      font-size: 1rem;
+    }
+
+    .policy-content p {
+      margin: 0 0 0.85rem;
+      font-size: 0.94rem;
+      color: #adb3cc;
+    }
+
+    .footer-meta {
+      color: #959bb7;
+      font-size: 0.88rem;
+    }
+
+    @keyframes heroEnter {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% {
+        opacity: 0.8;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes drift {
+      from {
+        transform: translateY(0);
+      }
+      to {
+        transform: translateY(20px);
+      }
+    }
+
+    @keyframes brandShimmer {
+      to {
+        background-position: 200% center;
+      }
+    }
+
+    @keyframes seatPulse {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.6);
+      }
+      70% {
+        transform: scale(1.12);
+        box-shadow: 0 0 0 10px rgba(255, 215, 0, 0);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+      }
+    }
+
+    @media (min-width: 600px) {
+      .waitlist-form {
+        grid-template-columns: 1fr auto;
+      }
+
+      .waitlist-form .btn {
+        min-width: 172px;
+      }
+    }
+
+    @media (min-width: 720px) {
+      .cards-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .cards-6 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .footer-grid {
+        grid-template-columns: 1.5fr 1fr 1fr;
+        align-items: start;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .cards-6 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .nav-inner {
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 0.7rem 0;
+      }
+
+      .nav-links {
+        width: 100%;
+        justify-content: center;
+        order: 3;
+      }
+
+      .top-nav .btn {
+        width: 100%;
+        max-width: 280px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="top-nav" id="top">
+    <div class="container nav-inner">
+      <a class="brand shimmer" href="#top" aria-label="GoldSeats home">⭐ GoldSeats</a>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#how-it-works">How it Works</a>
+        <a href="#features">Features</a>
+        <a href="#waitlist">Waitlist</a>
+      </nav>
+      <a class="btn btn-primary" href="#waitlist">Join Waitlist</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero section visible" id="hero">
+      <div class="hero-particles" aria-hidden="true"></div>
+      <div class="container">
+        <div class="hero-content">
+          <p class="hero-kicker">AI-Powered Seat Intelligence</p>
+          <h1 class="hero-title">Find Your <span class="gold">Perfect Seat.</span> Every Time.</h1>
+          <p class="hero-subtitle">GoldSeats uses AI to analyze live theatre layouts and recommend the best seat — whether you're flying solo or with your crew.</p>
+          <p class="seat-score" aria-label="Live golden seat score">
+            <span class="seat-score-dot" aria-hidden="true"></span>
+            Golden Seat Score: <strong>98/100</strong>
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#waitlist">Join the Waitlist</a>
+            <a class="btn btn-secondary" href="#how-it-works">See How It Works</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="social-proof section" id="social-proof">
+      <div class="container">
+        <p class="social-proof-main">🎬 Be one of the first waiting for smarter seat selection</p>
+        <p class="social-proof-sub">Coming soon to Cineplex and more</p>
+      </div>
+    </section>
+
+    <section class="section how-it-works" id="how-it-works">
+      <div class="container">
+        <h2 class="section-title">How GoldSeats Works</h2>
+        <div class="cards cards-3">
+          <article class="card">
+            <span class="card-icon" aria-hidden="true">🎭</span>
+            <h3>Choose Your Theatre</h3>
+            <p>Select your cinema and showtime</p>
+          </article>
+          <article class="card">
+            <span class="card-icon" aria-hidden="true">🤖</span>
+            <h3>AI Scans the Layout</h3>
+            <p>Our vision model analyzes available and booked seats in real time</p>
+          </article>
+          <article class="card">
+            <span class="card-icon" aria-hidden="true">⭐</span>
+            <h3>Get Your Golden Seat</h3>
+            <p>Receive the best seat recommendation instantly, solo or for your whole group</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section features" id="features">
+      <div class="container">
+        <h2 class="section-title">Why GoldSeats?</h2>
+        <div class="cards cards-6">
+          <article class="card">
+            <span class="card-icon" aria-hidden="true">🎯</span>
+            <h3>Best Seat Guaranteed</h3>
+            <p>AI picks the optimal viewing angle every time</p>
+          </article>
+          <article class="card">
+            <span class="card-icon" aria-hidden="true">👥</span>
+            <h3>Solo &amp; Group Modes</h3>
+            <p>Perfect seats for 1 person or a full crew</p>
+          </article>
+          <article class="card">
+            <span class="card-icon" aria-hidden="true">📍</span>
+            <h3>Real-Time Layout</h3>
+            <p>Always uses the latest available seating map</p>
+          </article>
+          <article class="card">
+            <span class="card-icon" aria-hidden="true">🎬</span>
+            <h3>Theatre View Preview</h3>
+            <p>See what your view looks like before you book</p>
+          </article>
+          <article class="card">
+            <span class="card-icon" aria-hidden="true">⚡</span>
+            <h3>Instant Recommendation</h3>
+            <p>Get your seat in seconds, no guessing</p>
+          </article>
+          <article class="card">
+            <span class="card-icon" aria-hidden="true">🏆</span>
+            <h3>Golden Seat Score</h3>
+            <p>Every seat rated so you always know the best option</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section waitlist" id="waitlist">
+      <div class="container">
+        <h2 class="section-title">Be First. Sit Best.</h2>
+        <p class="section-subtitle">Join the waitlist and get early access when GoldSeats launches.</p>
+        <div class="waitlist-panel">
+          <form class="waitlist-form" id="waitlist-form" action="https://formspree.io/f/xqeynnje" method="POST">
+            <label for="email" class="sr-only" style="position:absolute;left:-9999px;">Email</label>
+            <input id="email" name="email" type="email" placeholder="Enter your email" required autocomplete="email">
+            <button type="submit" class="btn btn-primary">Claim My Seat</button>
+          </form>
+          <p class="form-success" id="form-success" role="status" aria-live="polite"></p>
+          <p class="form-note">No spam. Just your golden seat notification.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section policy" id="privacy-policy">
+      <div class="container">
+        <h2 class="section-title">Privacy Policy</h2>
+        <div class="policy-content">
+          <h3>What we collect</h3>
+          <p>When you join our waitlist, we collect your email address so we can notify you when GoldSeats launches.</p>
+          <h3>How we use your information</h3>
+          <p>We only use your email for product updates, launch announcements, and early access invitations related to GoldSeats.</p>
+          <h3>Data sharing</h3>
+          <p>We do not sell your personal information. We may use trusted service providers, like Formspree, to process waitlist submissions.</p>
+          <h3>Your choice</h3>
+          <p>You can unsubscribe from future emails at any time. For privacy questions, contact us through the Contact link below.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <p class="brand">⭐ GoldSeats</p>
+        <p>GoldSeats — The smartest way to pick your seat.</p>
+      </div>
+      <div class="footer-links" aria-label="Footer links">
+        <a href="#privacy-policy">Privacy Policy</a>
+        <a href="#">Contact</a>
+      </div>
+      <div class="footer-social" aria-label="Social placeholders">
+        <a href="#" aria-label="Twitter or X"><i class="fa-brands fa-x-twitter" aria-hidden="true"></i></a>
+        <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram" aria-hidden="true"></i></a>
+        <a href="#" aria-label="TikTok"><i class="fa-brands fa-tiktok" aria-hidden="true"></i></a>
+      </div>
+    </div>
+    <div class="container footer-meta">
+      <p>© 2026 GoldSeats. All rights reserved.</p>
+      <p>Currently in development. Coming soon to theatres near you.</p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var nav = document.querySelector(".top-nav");
+      var revealTargets = document.querySelectorAll(".section, .card");
+      var waitlistForm = document.getElementById("waitlist-form");
+      var formSuccess = document.getElementById("form-success");
+
+      function updateNavState() {
+        if (window.scrollY > 10) {
+          nav.classList.add("scrolled");
+        } else {
+          nav.classList.remove("scrolled");
+        }
+      }
+
+      updateNavState();
+      window.addEventListener("scroll", updateNavState, { passive: true });
+
+      var observer = new IntersectionObserver(function (entries, io) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15, rootMargin: "0px 0px -6% 0px" });
+
+      revealTargets.forEach(function (node) {
+        if (!node.classList.contains("visible")) {
+          observer.observe(node);
+        }
+      });
+
+      waitlistForm.addEventListener("submit", function () {
+        formSuccess.textContent = "You're on the list! 🎉 We'll be in touch soon.";
+      });
+    })();
+  </script>
+</body>
+</html>
